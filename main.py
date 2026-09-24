@@ -13,7 +13,7 @@ import openai
 app = FastAPI(title="Invoice Parser API")
 @app.get("/")
 def read_root():
-    return FileResponse("index.html")
+    return {"status": "Invoice Parser API is running live!"}
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
