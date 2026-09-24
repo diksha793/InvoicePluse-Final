@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Parser Dashboard</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 40px; background-color: #f8f9fa; color: #333; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { margin-top: 0; color: #2c3e50; }
+        .upload-area { border: 2px dashed #007bff; border-radius: 6px; padding: 30px; text-align: center; margin-bottom: 20px; background: #f1f8ff; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        button:hover { background: #0056b3; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
+        th { background-color: #f1f3f5; }
+        .badge { background: #28a745; color: white; padding: 3px 8px; border-radius: 12px; font-size: 12px; }
+        #status { font-weight: bold; margin-top: 10px; color: #555; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Invoice Parsing & Extraction System</h1>
+    
+    <div class="upload-area">
+        <h3>Upload PDF Invoice</h3>
+        <input type="file" id="invoiceFile" accept="application/pdf">
+        <button onclick="uploadInvoice()">Parse & Save Invoice</button>
+        <div id="status"></div>
+    </div>
+
+    <h2>Parsed Invoices</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Vendor</th>
+                <th>Invoice #</th>
+                <th>Date</th>
+                <th>Total Amount</th>
+                <th>Items Count</th>
+            </tr>
+        </thead>
+        <tbody id="invoiceTableBody">
+            <!-- Data dynamically populated -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    const API_URL = "http://127.0.0.1:8000/api";
+
+    async function fetchInvoices() {
+        try {
+            const res = await fetch(`${API_URL}/invoices`);
+            const result = await res.json();
+            const tbody = document.getElementById("invoiceTableBody");
+            tbody.innerHTML = "";
+
+            result.invoices.forEach(inv => {
+                const row = `
+                    <tr>
+                        <td>#${inv.id}</td>
+                        <td><strong>${inv.vendor_name || 'N/A'}</strong></td>
+                        <td>${inv.invoice_number || 'N/A'}</td>
+                        <td>${inv.invoice_date || 'N/A'}</td>
+                        <td>$${inv.total_amount ? inv.total_amount.toFixed(2) : '0.00'}</td>
+                        <td><span class="badge">${inv.line_items.length} items</span></td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        } catch (err) {
+            console.error("Error fetching invoices:", err);
+        }
+    }
+
+    async function uploadInvoice() {
+        const fileInput = document.getElementById("invoiceFile");
+        const statusDiv = document.getElementById("status");
+
+        if (!fileInput.files[0]) {
+            alert("Please select a PDF file first.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        statusDiv.innerText = "Parsing PDF with LLM pipeline...";
+
+        try {
+            const res = await fetch(`${API_URL}/upload`, {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                statusDiv.style.color = "green";
+                statusDiv.innerText = "Successfully parsed and saved!";
+                fetchInvoices();
+            } else {
+                statusDiv.style.color = "red";
+                statusDiv.innerText = "Error: " + (data.detail || "Failed to process PDF.");
+            }
+        } catch (err) {
+            statusDiv.style.color = "red";
+            statusDiv.innerText = "Failed to connect to API server.";
+        }
+    }
+
+    // Load table data on startup
+    fetchInvoices();
+</script>
+
+</body>
+</html>
