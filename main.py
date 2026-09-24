@@ -4,14 +4,16 @@ import io
 import sqlite3
 import pdfplumber
 from typing import List
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import openai
 
 # Initialize FastAPI App
 app = FastAPI(title="Invoice Parser API")
-
+@app.get("/")
+def read_root():
+    return FileResponse("index.html")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
