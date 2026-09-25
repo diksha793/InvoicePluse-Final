@@ -7,7 +7,7 @@ from typing import List
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-import pydantic
+from pydantic import BaseModel, Field
 import openai
 
 # Initialize FastAPI App
