@@ -5,11 +5,11 @@ import sqlite3
 import pdfplumber
 from typing import List
 from fastapi import FastAPI, UploadFile, File, HTTPException
- HTTPException, FileResponse
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+import pydantic
 import openai
-
+
 # Initialize FastAPI App
 app = FastAPI(title="Invoice Parser API")
 @app.get("/")
